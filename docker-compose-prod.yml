@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+
+  db:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 6603:3306 # make port accessible with sequel pro from IP.. probably not safe!
+    volumes:
+      - db_data:/var/lib/mysql # map the data to a volume
+      # - ./db_data:/var/lib/mysql # map the data locally
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+  wordpress:
+    depends_on:
+      - db
+    # image: wordpress:5.2-php7.1
+    image: wordpress:latest
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      # use scp to copy files to host machine 
+      # volume will not mount on a remote host machine, when using docker-machine,
+      # this is because it copies the local path from your drive
+      # so make sure to copy files to host and ref the path on host machine
+      # https://github.com/docker/compose/issues/2247#issuecomment-236727733
+      # - ./themes:/var/www/html/wp-content/themes/
+      # link to the files on the host machine, not your local drive
+      - /home/wp-content:/var/www/html/wp-content/
+      # uploads
+      # - ./plugins:/var/www/html/wp-content/plugins/
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress  
+volumes:
+  db_data: {}
+# volumes allow data to persist between containers, we can destroy a container and 
+# keep the db volume alive so we don't lose any content or have to setup the site again 
+# https://docs.docker.com/compose/wordpress/
+# https://docs.docker.com/storage/volumes/

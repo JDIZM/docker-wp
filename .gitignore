@@ -1,0 +1,13 @@
+# keep .env private
+.env
+
+# ignore default themes
+themes/twentynineteen
+themes/twentyseventeen
+themes/wentysixteen
+
+# exclude everything
+# plugins/*
+
+# exception to the rule
+!plugins/.gitkeep 
