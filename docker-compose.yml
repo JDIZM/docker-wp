@@ -15,6 +15,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      
   wordpress:
     depends_on:
       - db
@@ -35,7 +36,8 @@ services:
       # uploads
       # - ./plugins:/var/www/html/wp-content/plugins/
       # locally mapped volumes
-     - ./wp-content/:/var/www/html/wp-content/
+    #  - ./wp-content/:/var/www/html/wp-content/
+      - ./wordpress:/var/www/html/
     environment:
       WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
       WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}

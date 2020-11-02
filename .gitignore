@@ -2,12 +2,17 @@
 .env
 
 # ignore default themes
-themes/twentynineteen
-themes/twentyseventeen
-themes/wentysixteen
+wordpress/wp-content/themes/_s
+wordpress/wp-content/themes/twentytwenty
+wordpress/wp-content/themes/twentynineteen
+wordpress/wp-content/themes/twentyseventeen
+
+# wp-config shouldn't be copied for security
+wordpress/wp-config.php
 
 # exclude everything
 # plugins/*
 
 # exception to the rule
-!plugins/.gitkeep 
+!wordpress/wp-content/plugins/.gitkeep 
+!wordpress/wp-content/uploads/.gitkeep 
