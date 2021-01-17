@@ -5,8 +5,8 @@ services:
   db:
     image: mysql:5.7
     restart: always
-    # ports:
-      # - 6603:3306 # make port accessible with sequel pro.. probably not safe in production!
+    ports:
+      - 6603:3306 # make port accessible with sequel pro.. probably not safe in production!
     volumes:
       - db_data:/var/lib/mysql # map the data to a volume
       # - ./db_data:/var/lib/mysql # map the data locally
@@ -19,17 +19,24 @@ services:
   wordpress:
     depends_on:
       - db
-    image: wordpress:latest
+    # image: wordpress:latest
+    build: . # use local dockerfile
     restart: always
     ports:
       - 8080:80
     volumes:
-      - ./wordpress:/var/www/html/ # locally mapped volume
+      # - db_data:/var/lib/mysql
+      - ./wp-content:/var/www/html/wp-content/ # locally mapped volume
     environment:
       WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
       WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
       WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
-      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}  
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports: 
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
 volumes:
   db_data: {}
 # volumes allow data to persist between containers, we can destroy a container and 
