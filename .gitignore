@@ -2,6 +2,7 @@
 .env
 
 # ignore default themes
+wp-content/themes/twentytwentyone
 wp-content/themes/twentytwenty
 wp-content/themes/twentynineteen
 wp-content/themes/twentyseventeen
