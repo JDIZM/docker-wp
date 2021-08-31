@@ -3,7 +3,7 @@ version: '3.3'
 services:
   nginx: 
     build:
-        context: ./nginx
+      context: ./nginx
     depends_on:
       - wordpress
     ports: 
@@ -11,10 +11,11 @@ services:
         - 443:443
     restart: always
     volumes:
-        - logs:/var/log/nginx
-        - certs:/etc/nginx/ssl
-        - certs:/etc/letsencrypt
-        - cbroot:/var/www/certbot
+      - logs:/var/log/nginx
+      - certs:/etc/nginx/ssl
+      - certs:/etc/letsencrypt
+      - cbroot:/var/www/certbot
+
   db:
     image: mysql:5.7
     restart: always
