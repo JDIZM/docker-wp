@@ -41,7 +41,7 @@ password: wordpress
 * use wp-sync-db plugin within wordpress
 * use wp cli
 
-Note: having issues with wp cli, it can't access the db but everything else works.
+Note: wp cli won't be able to access to the db container volume
 
 ## SMTP & EMAIL
 
@@ -98,3 +98,41 @@ configure the wp-mail-smtp plugin with your mailgun settings
 
 * enable permalinks
 * `http://localhost:8080/wp-json/wp/v2`
+
+
+## EXPORTING MYSQL DATABASE
+
+The wordpress user created with this build won't have permissions to export the database you will need to use root.
+
+From the official mysql docker image https://hub.docker.com/_/mysql when `MYSQL_RANDOM_ROOT_PASSWORD` is set to true "The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....)." You can view your docker container log when the db image first boots up to get the root password.
+
+Uncomment this line in the docker-compose file if you want to set a custom root password:
+```
+MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT}
+```
+set the .env var `MYSQL_ROOT` with your desired root password. You can also save the randomly generated root password in .env for safe keeping.
+
+Steps to export and import the mysql database:
+```
+# get the container id
+docker ps
+
+# gain a shell to the db container
+docker exec -it containerid
+
+# export the wp database
+mysqldump -u root -p wordpress > backup.sql
+
+# then enter your root password on prompt
+# check the backup.sql file has been created
+ls
+
+# copy from docker container
+docker cp container:./backup.sql ./backup.sql 
+
+# copy to docker container
+docker cp ./import.sql container:./import.sql
+
+# import existing database dump
+mysql -u root -p < import.sql
+```
