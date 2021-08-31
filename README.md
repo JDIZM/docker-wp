@@ -2,11 +2,14 @@
 
 using docker compose to build a container with
 
+* nginx
 * wordpress
 * mysql
 * underscores starter theme
 * wp-cli
 * mailhog
+* letsencrypt 
+* certbot
 
 `/wp-content/` will be mapped to the container
 
@@ -21,28 +24,46 @@ you can use `docker stack deploy` command instead of `docker-compose` to deploy 
 
 deploying to swarm: `docker stack deploy -c docker-compose.yml docker-wp`
 
-load up the browser `http://127.0.0.1:8080`
+load up the browser `http://127.0.0.1`
 
 install wordpress it will use the db settings in the .env so you won't have to enter them. The installation will persist on db_data volume until its removed.
 
-## CONNECTING TO THE DB
+## EXPORTING MYSQL DATABASE
 
-Multiple ways of connecting to the database
+The wordpress user created with this build won't have permissions to export the database you will need to use root.
 
-* connect to db with sequel pro
+From the official mysql docker image https://hub.docker.com/_/mysql when `MYSQL_RANDOM_ROOT_PASSWORD` is set to true "The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....)." You can view your docker container log when the db image first boots up to get the root password.
 
-```config
-host: 127.0.0.1
-port: 6603
-username: wordpress
-password: wordpress
+Uncomment this line in the docker-compose file if you want to set a custom root password:
 ```
+MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT}
+```
+set the .env var `MYSQL_ROOT` with your desired root password. You can also save the randomly generated root password in .env for safe keeping.
 
-* use wp-sync-db plugin within wordpress
-* use wp cli
+Steps to export and import the mysql database:
+```
+# get the container id
+docker ps
 
-Note: wp cli won't be able to access to the db container volume
+# gain a shell to the db container
+docker exec -it containerid
 
+# export the wp database
+mysqldump -u root -p wordpress > backup.sql
+
+# then enter your root password on prompt
+# check the backup.sql file has been created
+ls
+
+# copy from docker container
+docker cp container:./backup.sql ./backup.sql 
+
+# copy to docker container
+docker cp ./import.sql container:./import.sql
+
+# import existing database dump
+mysql -u root -p < import.sql
+```
 ## SMTP & EMAIL
 
 * wp-mail-smtp plugin
@@ -84,7 +105,7 @@ Note: I've tried automating this on the build of the dockerfile see **mailhog-co
 1. `cd /var/www/html`
 1. activate the theme (with modified functions.php) `wp theme activate _s --allow-root`
 1. activate the wp-mail-smtp plugin  `wp plugin activate wp-mail-smtp --allow-root`
-1. Send a test mail from the plugin dashboard `http://localhost:8080/wp-admin/admin.php?page=wp-mail-smtp&tab=test`
+1. Send a test mail from the plugin dashboard `http://localhost/wp-admin/admin.php?page=wp-mail-smtp&tab=test`
 1. check mailhog caught it! `http://localhost:8025/`
 
 ### MAILGUN FOR PRODUCTION
@@ -97,42 +118,8 @@ configure the wp-mail-smtp plugin with your mailgun settings
 ## WP REST API
 
 * enable permalinks
-* `http://localhost:8080/wp-json/wp/v2`
+* `http://localhost/wp-json/wp/v2`
 
+## SSL config
 
-## EXPORTING MYSQL DATABASE
-
-The wordpress user created with this build won't have permissions to export the database you will need to use root.
-
-From the official mysql docker image https://hub.docker.com/_/mysql when `MYSQL_RANDOM_ROOT_PASSWORD` is set to true "The generated root password will be printed to stdout (GENERATED ROOT PASSWORD: .....)." You can view your docker container log when the db image first boots up to get the root password.
-
-Uncomment this line in the docker-compose file if you want to set a custom root password:
-```
-MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT}
-```
-set the .env var `MYSQL_ROOT` with your desired root password. You can also save the randomly generated root password in .env for safe keeping.
-
-Steps to export and import the mysql database:
-```
-# get the container id
-docker ps
-
-# gain a shell to the db container
-docker exec -it containerid
-
-# export the wp database
-mysqldump -u root -p wordpress > backup.sql
-
-# then enter your root password on prompt
-# check the backup.sql file has been created
-ls
-
-# copy from docker container
-docker cp container:./backup.sql ./backup.sql 
-
-# copy to docker container
-docker cp ./import.sql container:./import.sql
-
-# import existing database dump
-mysql -u root -p < import.sql
-```
+...
