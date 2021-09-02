@@ -5,28 +5,46 @@ using docker compose to build a container with
 * nginx
 * wordpress
 * mysql
+* mailhog
 * underscores starter theme
 * wp-cli
-* mailhog
 * letsencrypt 
 * certbot
 
-`/wp-content/` will be mapped to the container
+`/wp-content/` will be mapped to the container for easy access to the theme files and content.
 
+Read the official docs for the respective docker images
+- [Wordpress](https://hub.docker.com/_/wordpress)
+- [MySQL](https://hub.docker.com/_/mysql)
+- [nginx](https://hub.docker.com/_/nginx)
+- [mailhog](https://hub.docker.com/r/mailhog/mailhog/)
+- [certbot](https://hub.docker.com/r/certbot/certbot/)
+
+Setting up SSL is optional and can be configured after setting up standard http.
+
+For development Mailhog will catch all email sent from wordpress and serve as an inbox to test.
+
+In the `docker-compose` file comment out mailhog and uncomment certbot for production and SSL setup.
 ## COMMANDS
 
-start: `docker-compose up -d`
-stop: `docker-compose down`
-remove all volumes: `docker-compose down -v`
-rebuild the image: `docker-compose build`
+- start: `docker-compose up -d`
+- stop: `docker-compose down`
+- remove all volumes: `docker-compose down -v`
+- build images on start: `docker-compose up --build`
 
-you can use `docker stack deploy` command instead of `docker-compose` to deploy to docker swarm <https://docs.docker.com/engine/swarm/stack-deploy/>
+You can use `docker stack deploy` command instead of `docker-compose` to deploy to docker swarm <https://docs.docker.com/engine/swarm/stack-deploy/> but this will require the images to be hosted on a registry like Docker Hub.
 
 deploying to swarm: `docker stack deploy -c docker-compose.yml docker-wp`
 
 load up the browser `http://127.0.0.1`
 
-install wordpress it will use the db settings in the .env so you won't have to enter them. The installation will persist on db_data volume until its removed.
+install wordpress it will use the db settings in the .env so you won't have to enter them. The installation will persist on `db_data` volume until its removed.
+## FILE PERMISSIONS
+
+Set the file permissions of the `wp-content` folder, since they are mounted from the host. Otherwise you will notice issues updating plugins.
+```
+chown -R www-data:www-data /var/www/html/wp-content
+```
 
 ## EXPORTING MYSQL DATABASE
 
@@ -46,7 +64,7 @@ Steps to export and import the mysql database:
 docker ps
 
 # gain a shell to the db container
-docker exec -it containerid
+docker exec -it containerid /bin/bash
 
 # export the wp database
 mysqldump -u root -p wordpress > backup.sql
@@ -70,7 +88,7 @@ mysql -u root -p < import.sql
 
 Setup the plugin and configure smtp settings to handle mail.
 
-### MAILHOG & PHPMAILER FOR LOCAL
+### MAILHOG & PHPMAILER FOR LOCAL EMAIL TESTING
 
 * composer is installed
 * phpmailer is installed
@@ -122,4 +140,33 @@ configure the wp-mail-smtp plugin with your mailgun settings
 
 ## SSL config
 
-...
+### 1. make sure your domain has a DNS A record pointing to the server ip.
+
+### 2. uncomment certbot in the docker compose file.
+
+### 3. Edit the command line in the docker compose file to include your domain and email
+```
+command: certonly --webroot --webroot-path=/var/www/certbot --email your-email@domain.com --agree-tos --no-eff-email -d domain.com -d www.domain.com
+```
+### 4. start the containers as normal
+
+```
+docker-compose up -d
+```
+
+### 5. certbot should get a certificate for your domain
+
+### 6. edit the location of your keychain in the `ssl.conf`
+```
+# ssl_certificate /etc/letsencrypt/live/mysite.com/fullchain.pem;
+# ssl_certificate_key /etc/letsencrypt/live/mysite.com/privkey.pem;
+```
+
+### 7. make a copy of the default.conf and replace it with the ssl.conf
+```
+cd nginx
+cp default.conf backup.conf
+cat ssl.conf > default.conf 
+```
+
+Now we can start the containers again using the ssl certificates certbot just created for the domain name and email we specified in the compose file.
