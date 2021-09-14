@@ -25,20 +25,32 @@ Setting up SSL is optional and can be configured after setting up standard http.
 For development Mailhog will catch all email sent from wordpress and serve as an inbox to test.
 
 In the `docker-compose` file comment out mailhog and uncomment certbot for production and SSL setup.
-## COMMANDS
+## SETUP
 
-- start: `docker-compose up -d`
-- stop: `docker-compose down`
-- remove all volumes: `docker-compose down -v`
-- build images on start: `docker-compose up --build`
+```
+# start containers
+docker-compose up -d
 
-You can use `docker stack deploy` command instead of `docker-compose` to deploy to docker swarm <https://docs.docker.com/engine/swarm/stack-deploy/> but this will require the images to be hosted on a registry like Docker Hub.
+# stop containers
+docker-compose down
 
-deploying to swarm: `docker stack deploy -c docker-compose.yml docker-wp`
+# stop containers and remove all volumes 
+docker-compose down -v
 
-load up the browser `http://127.0.0.1`
+# build images on start
+docker-compose up --build
+```
 
-install wordpress it will use the db settings in the .env so you won't have to enter them. The installation will persist on `db_data` volume until its removed.
+Once containers are running load up the browser `http://127.0.0.1` 
+
+Install wordpress it will use the db settings from the .env so you won't have to enter them. The installation will persist on `db_data` volume until its removed. As you can see from the `docker-compose.yml` we are referencing the container name `db` as the wordpress containers `DB_HOST` this will connect both containers without having to expose any ports.
+
+You can [deploy to docker swarm](https://docs.docker.com/engine/swarm/stack-deploy/) if you want to run containers on multiple hosts at the same time but this will require the images to be hosted on a registry like Docker Hub.
+
+```
+# deploying to swarm
+docker stack deploy -c docker-compose.yml docker-wp
+```
 ## FILE PERMISSIONS
 
 Set the file permissions of the `wp-content` folder, since they are mounted from the host. Otherwise you will notice issues updating plugins.
@@ -140,29 +152,29 @@ configure the wp-mail-smtp plugin with your mailgun settings
 
 ## SSL config
 
-### 1. make sure your domain has a DNS A record pointing to the server ip.
+#### 1. make sure your domain has a DNS A record pointing to the server ip.
 
-### 2. uncomment certbot in the docker compose file.
+#### 2. uncomment certbot in the docker compose file.
 
-### 3. Edit the command line in the docker compose file to include your domain and email
+#### 3. Edit the command line in the docker compose file to include your domain and email
 ```
 command: certonly --webroot --webroot-path=/var/www/certbot --email your-email@domain.com --agree-tos --no-eff-email -d domain.com -d www.domain.com
 ```
-### 4. start the containers as normal
+#### 4. start the containers as normal
 
 ```
 docker-compose up -d
 ```
 
-### 5. certbot should get a certificate for your domain
+#### 5. certbot should get a certificate for your domain
 
-### 6. edit the location of your keychain in the `ssl.conf`
+#### 6. edit the location of your keychain in the `ssl.conf`
 ```
 # ssl_certificate /etc/letsencrypt/live/mysite.com/fullchain.pem;
 # ssl_certificate_key /etc/letsencrypt/live/mysite.com/privkey.pem;
 ```
 
-### 7. make a copy of the default.conf and replace it with the ssl.conf
+#### 7. make a copy of the default.conf and replace it with the ssl.conf
 ```
 cd nginx
 cp default.conf backup.conf
