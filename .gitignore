@@ -10,9 +10,11 @@ wp-content/themes/twentyseventeen
 # wp-config shouldn't be copied for security
 wp-config.php
 
-# exclude everything
-# plugins/*
+# exclude content and plugins
+wp-content/plugins
+wp-content/uploads
+wp-content/upgrade
 
 # exception to the rule
-# !wp-content/plugins/.gitkeep 
-# !wp-content/uploads/.gitkeep 
+!wp-content/plugins/.gitkeep 
+!wp-content/uploads/.gitkeep 
